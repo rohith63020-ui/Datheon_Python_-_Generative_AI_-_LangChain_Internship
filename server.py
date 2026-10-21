@@ -117,7 +117,21 @@ class ExtractorHTTPRequestHandler(BaseHTTPRequestHandler):
 
             mock_response = None
             if use_mock:
-                if doc_type == "invoice":
+                if "CORRUPT" in doc_text.upper():
+                    mock_response = json.dumps({
+                        "invoice_number": "INV-FAIL-01",
+                        "invoice_date": "2024-10-15",
+                        "vendor_name": "Glitch Systems",
+                        "customer_name": "Bad Customer",
+                        "items": [
+                            {"description": "Corrupted Storage", "quantity": -10.0, "unit_price": 50.0, "total": -500.0}
+                        ],
+                        "subtotal": 500.0,
+                        "tax_amount": 0.0,
+                        "total_amount": 500.0,
+                        "currency": "USD"
+                    })
+                elif doc_type == "invoice":
                     mock_response = json.dumps({
                         "invoice_number": "INV-2024-00892",
                         "invoice_date": "2024-10-15",

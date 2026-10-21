@@ -897,7 +897,17 @@ Missing: Invoice Number and Customer Name completely omitted!
         });
 
         const elapsed = Math.round(performance.now() - startTime);
-        const result = await response.json();
+        const textResponse = await response.text();
+        let result;
+        try {
+          result = JSON.parse(textResponse);
+        } catch (jsonErr) {
+          result = {
+            status: 'error',
+            error_type: `Server Error (${response.status})`,
+            message: textResponse.slice(0, 500)
+          };
+        }
 
         if (response.ok && result.status === 'success') {
           lastExtractedData = result.data;

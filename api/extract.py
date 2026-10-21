@@ -1,6 +1,6 @@
 """
 Vercel Serverless Function: /api/extract
-Handles structured data extraction for invoices and resumes.
+Handles structured data extraction for invoices and resumes with strict Pydantic validation.
 """
 
 from __future__ import annotations
@@ -10,19 +10,31 @@ import os
 import sys
 from http.server import BaseHTTPRequestHandler
 
-# Add root directory to sys.path so extractor can be imported cleanly
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+# Ensure both api/ directory and root directory are in sys.path
+api_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(api_dir)
+for p in [api_dir, root_dir]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-from extractor import (
-    extract_invoice,
-    extract_resume,
-    SchemaValidationError,
-    MalformedJSONError,
-    MissingAPIKeyError,
-    LLMAPIError,
-)
+try:
+    from extractor import (
+        extract_invoice,
+        extract_resume,
+        SchemaValidationError,
+        MalformedJSONError,
+        MissingAPIKeyError,
+        LLMAPIError,
+    )
+except ImportError:
+    from .extractor import (
+        extract_invoice,
+        extract_resume,
+        SchemaValidationError,
+        MalformedJSONError,
+        MissingAPIKeyError,
+        LLMAPIError,
+    )
 
 
 class handler(BaseHTTPRequestHandler):
@@ -34,8 +46,15 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        content_length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
+        except Exception as e:
+            self.send_json_response(
+                {"status": "error", "error_type": "ReadError", "message": f"Failed to read request body: {str(e)}"},
+                status=400,
+            )
+            return
 
         try:
             payload = json.loads(body)
@@ -63,7 +82,22 @@ class handler(BaseHTTPRequestHandler):
 
         mock_response = None
         if use_mock:
-            if doc_type == "invoice":
+            # Check if testing corrupt error handling
+            if "CORRUPT" in doc_text.upper():
+                mock_response = json.dumps({
+                    "invoice_number": "INV-FAIL-01",
+                    "invoice_date": "2024-10-15",
+                    "vendor_name": "Glitch Systems",
+                    "customer_name": "Bad Customer",
+                    "items": [
+                        {"description": "Corrupted Storage", "quantity": -10.0, "unit_price": 50.0, "total": -500.0}
+                    ],
+                    "subtotal": 500.0,
+                    "tax_amount": 0.0,
+                    "total_amount": 500.0,
+                    "currency": "USD"
+                })
+            elif doc_type == "invoice":
                 mock_response = json.dumps({
                     "invoice_number": "INV-2024-00892",
                     "invoice_date": "2024-10-15",
