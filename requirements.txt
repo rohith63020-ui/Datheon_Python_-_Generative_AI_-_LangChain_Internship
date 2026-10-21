@@ -1,0 +1,4 @@
+# Core structured LLM prompt pipeline & JSON extractor dependencies
+# Note: google-genai is the current official Google GenAI SDK (superseding deprecated google-generativeai)
+google-genai>=1.0.0
+pydantic>=2.0.0

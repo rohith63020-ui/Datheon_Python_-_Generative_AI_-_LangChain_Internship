@@ -1,0 +1,29 @@
+ACME CLOUD SERVICES LLC
+123 Innovation Way, Suite 400
+Tech City, CA 94016
+Email: billing@acmecloud.com
+
+INVOICE
+
+Invoice Number: INV-2024-00892
+Invoice Date: October 15, 2024
+Payment Due Date: November 14, 2024
+
+BILLED TO:
+Apex Global Technologies Inc.
+789 Market Street, 10th Floor
+San Francisco, CA 94103
+Attention: Accounts Payable
+
+DESCRIPTION                          QTY    UNIT PRICE     TOTAL
+Cloud Server Cluster (c6g.4xlarge)     4       $250.00   $1000.00
+Managed PostgreSQL Database (Large)    1       $450.00    $450.00
+Data Egress & Backup Storage (TB)      5        $30.00    $150.00
+24/7 Enterprise Support Sla            1       $400.00    $400.00
+
+-----------------------------------------------------------------
+Subtotal:                                                $2000.00
+Tax (8.5%):                                               $170.00
+Total Due (USD):                                         $2170.00
+-----------------------------------------------------------------
+Payment Terms: Net 30. Please remit payment via ACH or Wire.

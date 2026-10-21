@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/extract", "destination": "/api/extract.py" },
+    { "source": "/api/sample", "destination": "/api/sample.py" },
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ]
+}
