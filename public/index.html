@@ -839,6 +839,7 @@
 
     function loadCorruptSample() {
       switchDocType('invoice');
+      document.getElementById('mockModeToggle').checked = true;
       document.getElementById('docTextInput').value = 
 `--- CORRUPT INVOICE TEST CASE ---
 Company: Glitch Systems

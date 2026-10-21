@@ -1,6 +1,12 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "functions": {
+    "api/*.py": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
   "rewrites": [
     { "source": "/api/extract", "destination": "/api/extract.py" },
     { "source": "/api/sample", "destination": "/api/sample.py" },
