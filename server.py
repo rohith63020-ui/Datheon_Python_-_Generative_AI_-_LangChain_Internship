@@ -11,7 +11,7 @@ import json
 import os
 import sys
 from http import HTTPStatus
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from extractor import (
@@ -28,17 +28,24 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PORT = 8000
 
 
-class ExtractorHTTPRequestHandler(SimpleHTTPRequestHandler):
+class ExtractorHTTPRequestHandler(BaseHTTPRequestHandler):
     """Handles static web requests and JSON extraction API endpoints."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=BASE_DIR, **kwargs)
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
 
     def do_GET(self):
         parsed = urlparse(self.path)
 
-        if parsed.path == "/" or parsed.path == "/index.html":
-            self.serve_file(os.path.join(BASE_DIR, "index.html"), "text/html; charset=utf-8")
+        if parsed.path in ("/", "/index.html"):
+            index_path = os.path.join(BASE_DIR, "index.html")
+            if not os.path.exists(index_path):
+                index_path = os.path.join(BASE_DIR, "public", "index.html")
+            self.serve_file(index_path, "text/html; charset=utf-8")
             return
 
         if parsed.path == "/api/sample":
@@ -55,7 +62,27 @@ class ExtractorHTTPRequestHandler(SimpleHTTPRequestHandler):
                 self.send_json_response({"error": "Sample file not found"}, status=404)
             return
 
-        super().do_GET()
+        # Check for static file in public or base dir
+        clean_path = parsed.path.lstrip("/")
+        candidate_paths = [
+            os.path.join(BASE_DIR, "public", clean_path),
+            os.path.join(BASE_DIR, clean_path),
+        ]
+        for cp in candidate_paths:
+            if os.path.isfile(cp):
+                content_type = "text/plain"
+                if cp.endswith(".html"):
+                    content_type = "text/html; charset=utf-8"
+                elif cp.endswith(".css"):
+                    content_type = "text/css"
+                elif cp.endswith(".js"):
+                    content_type = "application/javascript"
+                elif cp.endswith(".json"):
+                    content_type = "application/json"
+                self.serve_file(cp, content_type)
+                return
+
+        self.send_error(HTTPStatus.NOT_FOUND, "File not found")
 
     def do_POST(self):
         parsed = urlparse(self.path)
@@ -226,6 +253,12 @@ def run_server(port: int = PORT):
     except KeyboardInterrupt:
         print("\nStopping server...")
         httpd.server_close()
+
+
+# Export top-level entrypoints recognized by Vercel Serverless Python runtime
+handler = ExtractorHTTPRequestHandler
+app = ExtractorHTTPRequestHandler
+application = ExtractorHTTPRequestHandler
 
 
 if __name__ == "__main__":
